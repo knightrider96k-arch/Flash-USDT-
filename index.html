@@ -1,13 +1,232 @@
 <!DOCTYPE html>
-
-<html>
+<html lang="en">
 <head>
-  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=UTF-8">
-  <title>Hello, World!</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flash USDT Preview (Dark)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827; /* Very dark background */
+        }
+        .card {
+            background-color: #1f2937; /* Dark gray card background */
+            border-radius: 1rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+            border: 1px solid #374151; /* Subtle border */
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+        }
+        .input-style {
+            background-color: #374151;
+            color: #f9fafb; /* Light text */
+            border: 1px solid #4b5563;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+        }
+        .input-style::placeholder {
+            color: #9ca3af;
+        }
+        .input-style:focus {
+            border-color: #6366f1; /* Indigo focus */
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.5);
+            outline: none;
+        }
+        .btn-primary {
+            background-color: #6366f1; /* Indigo primary color */
+            color: white;
+            font-weight: bold;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.4);
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        .btn-primary:hover {
+            background-color: #4f46e5;
+        }
+        /* Custom animation for success feedback */
+        @keyframes pulse-success {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.03); opacity: 0.9; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-success {
+            animation: pulse-success 0.5s ease-in-out;
+        }
+    </style>
 </head>
-<body>
-  <h1>
-    Hello, World!
-  </h1>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-md">
+
+        <!-- Page 1: Code Redemption -->
+        <div id="page1" class="card p-6 sm:p-8 space-y-4">
+            <header class="text-center mb-4">
+                <h1 class="text-4xl font-extrabold text-[#6366f1]">Flash USDT</h1>
+                <p class="text-base text-gray-400 mt-1">Secure Redemption Portal</p>
+            </header>
+
+            <input id="redeemCodeInput" type="text" class="w-full input-style" placeholder="Enter Redemption Code">
+
+            <button id="redeemButton" class="w-full py-3 btn-primary text-lg">
+                Redeem Code
+            </button>
+
+            <!-- Status message element - color handled by JS -->
+            <p id="statusMessage1" class="text-center text-sm min-h-[20px]"></p>
+
+            <button id="safetyButton" class="w-full text-[#6366f1] bg-transparent text-sm py-2 mt-4 font-semibold">
+                ✨ Generate Safety Explanation
+            </button>
+
+            <div id="safetyTextContainer" class="hidden text-xs text-gray-400 bg-gray-700 p-3 rounded-lg border border-gray-600">
+                USDT (Tether) is a stablecoin pegged to the US dollar. TRC-20 refers to the token standard used on the Tron blockchain. 'Flash redemption' schemes are frequently associated with fraudulent activity (scams) where users are encouraged to input credentials or send funds under the false promise of immediate, large returns. Always verify the source and legitimacy of any crypto platform before interacting.
+            </div>
+        </div>
+
+        <!-- Page 2: Wallet and Amount (Hidden by Default) -->
+        <div id="page2" class="card p-6 sm:p-8 space-y-4 hidden opacity-0 translate-y-2">
+            <header class="text-center mb-4">
+                <h1 class="text-4xl font-extrabold text-[#6366f1]">Flash USDT</h1>
+                <h2 class="text-xl font-semibold text-gray-300 mt-1">Wallet &amp; Amount Details</h2>
+                <p class="text-xs text-gray-400 mt-3 leading-relaxed">
+                    Please enter your Binance USDT (TRC-20) wallet address and the amount you wish to receive.
+                    Ensure your wallet address is correct. Transactions cannot be reversed.
+                </p>
+            </header>
+
+            <!-- 1. Wallet Address Field -->
+            <label for="walletAddressInput" class="text-sm font-medium text-gray-300 block mb-1">Binance USDT (TRC-20) Address</label>
+            <input id="walletAddressInput" type="text" class="w-full input-style mb-4" placeholder="Paste address here...">
+
+            <!-- 2. Flash USDT Amount Field -->
+            <label for="amountInput" class="text-sm font-medium text-gray-300 block mb-1">Flash USDT Amount</label>
+            <input id="amountInput" type="number" class="w-full input-style mb-4" placeholder="e.g., 500.00">
+            
+            <!-- 3. Activation Key Field -->
+            <label for="activationKeyInput" class="text-sm font-medium text-gray-300 block mb-1">Activation Key</label>
+            <input id="activationKeyInput" type="text" class="w-full input-style mb-6" placeholder="Enter key here...">
+
+            <button id="submitButton" class="w-full py-3 btn-primary text-lg mt-4">
+                Submit Address & Amount
+            </button>
+
+            <!-- Status message element - color handled by JS -->
+            <p id="statusMessage2" class="text-center text-sm min-h-[20px]"></p>
+        </div>
+    </div>
+
+    <script>
+        const CORRECT_ACTIVATION_KEY = 'fskixgev5hdh79hdjwb6';
+        
+        const page1 = document.getElementById('page1');
+        const page2 = document.getElementById('page2');
+        const redeemCodeInput = document.getElementById('redeemCodeInput');
+        const redeemButton = document.getElementById('redeemButton');
+        const statusMessage1 = document.getElementById('statusMessage1');
+        const safetyButton = document.getElementById('safetyButton');
+        const safetyTextContainer = document.getElementById('safetyTextContainer');
+        const walletAddressInput = document.getElementById('walletAddressInput');
+        const amountInput = document.getElementById('amountInput');
+        const activationKeyInput = document.getElementById('activationKeyInput');
+        const submitButton = document.getElementById('submitButton');
+        const statusMessage2 = document.getElementById('statusMessage2');
+
+        // Helper function to remove all specific color classes
+        function clearStatusClasses(element) {
+            element.classList.remove('text-red-400', 'text-green-400', 'text-yellow-400', 'animate-success');
+        }
+
+        // Helper function for smooth page transition
+        function transitionToPage2() {
+            page1.style.opacity = '0';
+            page1.style.transform = 'translateY(-10px)';
+            
+            setTimeout(() => {
+                page1.classList.add('hidden');
+                page2.classList.remove('hidden');
+                
+                // Animate Page 2 in
+                setTimeout(() => {
+                    page2.style.opacity = '1';
+                    page2.style.transform = 'translateY(0)';
+                }, 50);
+            }, 500); // Matches CSS transition time
+        }
+
+        // --- Page 1 Logic: Redeem Code and Transition ---
+        redeemButton.addEventListener('click', () => {
+            const code = redeemCodeInput.value.trim();
+            statusMessage1.textContent = '';
+            clearStatusClasses(statusMessage1);
+            redeemButton.disabled = true;
+
+            setTimeout(() => {
+                if (code.toLowerCase() === 'flasherking') {
+                    // SUCCESS: Green Text
+                    statusMessage1.textContent = 'Access Granted: Initializing...';
+                    statusMessage1.classList.add('text-green-400', 'animate-success');
+                    
+                    setTimeout(transitionToPage2, 1000);
+                } else {
+                    // Failure: Red Text
+                    statusMessage1.textContent = 'Failed to open. Please check the code and try again.';
+                    statusMessage1.classList.add('text-red-400');
+                }
+                redeemButton.disabled = false;
+            }, 1000); // 1s wait
+        });
+
+        // --- Safety Explanation Toggle Logic ---
+        safetyButton.addEventListener('click', () => {
+            const isHidden = safetyTextContainer.classList.contains('hidden');
+            safetyTextContainer.classList.toggle('hidden');
+            safetyButton.textContent = isHidden ? 'Hide Safety Explanation' : '✨ Generate Safety Explanation';
+        });
+
+        // --- Page 2 Logic: Conditional Submission ---
+        submitButton.addEventListener('click', () => {
+            const address = walletAddressInput.value.trim();
+            const amount = amountInput.value.trim();
+            const activationKey = activationKeyInput.value.trim();
+            statusMessage2.textContent = '';
+            clearStatusClasses(statusMessage2);
+
+            // 1. Check for empty fields
+            if (address.length === 0 || amount.length === 0 || activationKey.length === 0) {
+                // Failure: Red Text
+                statusMessage2.textContent = 'Please fill out all fields.';
+                statusMessage2.classList.add('text-red-400');
+                return;
+            }
+
+            // 2. Check Activation Key (Immediate Failure)
+            if (activationKey !== CORRECT_ACTIVATION_KEY) {
+                // Failure: Red Text
+                statusMessage2.textContent = "Enter valid activation key";
+                statusMessage2.classList.add('text-red-400');
+                return; 
+            }
+
+            // --- SUCCESS PATH (Correct Key) ---
+            submitButton.disabled = true;
+            submitButton.textContent = 'Transaction Processing...';
+            
+            // Processing: Yellow Text
+            statusMessage2.textContent = 'Transaction Processing...';
+            statusMessage2.classList.add('text-yellow-400');
+
+            setTimeout(() => {
+                // Final Success: Green Text
+                statusMessage2.textContent = "Transfer Complete!";
+                clearStatusClasses(statusMessage2); // Remove yellow
+                statusMessage2.classList.add('text-green-400', 'animate-success');
+                submitButton.textContent = 'Completed';
+                // Button remains disabled on success
+            }, 2000);
+        });
+    </script>
 </body>
-</html>
+  </html>
+
